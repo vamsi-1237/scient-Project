@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/home_screen.dart';
+import 'package:flutter_application_1/main_screen.dart';
 
 
 
@@ -19,9 +19,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     //required to return a Widget - MaterialApp
     return MaterialApp(
-      title: 'Currency-Converter',
+      title: 'Password Vault App',
       theme: ThemeData(primarySwatch: Colors.blueGrey),
-      home: HomeScreen(),
+      home: PasswordVaultApp(),
     );
   }
 }
