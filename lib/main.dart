@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/main_screen.dart';
+import 'package:flutter_application_1/currency_converter.dart';
+import 'package:flutter_application_1/home_screen.dart';
+
 
 
 
@@ -21,7 +23,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Password Vault App',
       theme: ThemeData(primarySwatch: Colors.blueGrey),
-      home: PasswordVaultApp(),
+      home: CurrencyConverter()
     );
   }
 }
