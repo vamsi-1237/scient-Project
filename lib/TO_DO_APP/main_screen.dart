@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/vault_home_screen.dart';
+import 'package:flutter_application_1/password_vault/vault_home_screen.dart';
 
 class PasswordVaultApp extends StatelessWidget {
   const PasswordVaultApp({super.key});

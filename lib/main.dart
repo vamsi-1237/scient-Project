@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/currency_converter.dart';
-import 'package:flutter_application_1/home_screen.dart';
-
-
-
+import 'package:flutter_application_1/currency_converter/currency_converter.dart';
 
 void main() => runApp(MyApp());
 //Needs a class as Input
@@ -16,15 +12,8 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  //abstract class method
   @override
   Widget build(BuildContext context) {
-    //required to return a Widget - MaterialApp
-    return MaterialApp(
-      title: 'Password Vault App',
-      theme: ThemeData(primarySwatch: Colors.blueGrey),
-      home: CurrencyConverter()
-    );
+    return const Placeholder();
   }
 }
-
