@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/currency_converter/currency_converter.dart';
+import 'package:flutter_application_1/weather_forecast/weather_screen.dart';
 
 void main() => runApp(MyApp());
 //Needs a class as Input
@@ -14,6 +14,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: const WeatherScreen(),
+      theme:ThemeData.dark(useMaterial3: true)
+    );
   }
 }
