@@ -6,6 +6,7 @@ import 'package:flutter_application_1/weather_forecast/additional_info.dart';
 import 'package:flutter_application_1/weather_forecast/hourly_forecast.dart';
 import 'package:flutter_application_1/weather_forecast/secrets.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -15,7 +16,8 @@ class WeatherScreen extends StatefulWidget {
 }
 
 class _WeatherScreenState extends State<WeatherScreen> {
-  Future<Map<String,dynamic>> getCurrentWeather() async {
+  late Future<Map<String, dynamic>> currentWeather;
+  Future<Map<String, dynamic>> getCurrentWeather() async {
     try {
       String cityName = 'London';
       final res = await http.get(
@@ -34,6 +36,12 @@ class _WeatherScreenState extends State<WeatherScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    currentWeather = getCurrentWeather();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -42,20 +50,37 @@ class _WeatherScreenState extends State<WeatherScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.refresh))],
+        actions: [
+          IconButton(
+            onPressed: () {
+              setState(() {
+                currentWeather = getCurrentWeather();
+              });//CAN ONLY REBUILD ONE SCREEN
+            },
+            icon: Icon(Icons.refresh),
+          ),
+        ],
       ),
       body: FutureBuilder(
-        future: getCurrentWeather(),
+        future: currentWeather, //saves reloading time since its just a variable
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: const CircularProgressIndicator.adaptive());
+            //UI changes according to the OS
           }
 
           if (snapshot.hasError) {
             return Center(child: Text(snapshot.error.toString()));
           }
 
-          final data = snapshot.data;
+          final data = snapshot.data!;
+          final currentWeatherData = data['list'][0];
+          final currentTemp = currentWeatherData['main']['temp'];
+          final currentSky = currentWeatherData['weather'][0]['main'];
+          final currentPressure = currentWeatherData['main']['pressure'];
+          final currentWindSpeed = currentWeatherData['wind']['speed'];
+          final currentHumidity = currentWeatherData['main']['humidity'];
+
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -80,7 +105,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                           child: Column(
                             children: [
                               Text(
-                                '200 K',
+                                '$currentTemp K',
                                 style: TextStyle(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
@@ -89,8 +114,16 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
                               const SizedBox(height: 10),
 
-                              Icon(Icons.cloud, size: 60),
-                              Text('Rain', style: TextStyle(fontSize: 20)),
+                              Icon(
+                                currentSky == 'Clouds' || currentSky == 'Rain'
+                                    ? Icons.cloud
+                                    : Icons.sunny,
+                                size: 60,
+                              ),
+                              Text(
+                                '$currentSky',
+                                style: TextStyle(fontSize: 20),
+                              ),
                             ],
                           ),
                         ),
@@ -104,45 +137,54 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: const Text(
-                    'Weather Forecast',
+                    'Hourly Forecast',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                 ),
 
-                const SingleChildScrollView(
+                /*SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      HourlyForecastItem(
-                        time: '3:00',
-                        temp: '301.4',
-                        icon: Icons.cloud,
-                      ),
-                      HourlyForecastItem(
-                        time: '3:30',
-                        temp: '302.4',
-                        icon: Icons.sunny,
-                      ),
-                      HourlyForecastItem(
-                        time: '4:00',
-                        temp: '303.4',
-                        icon: Icons.cloud,
-                      ),
-                      HourlyForecastItem(
-                        time: '4:30',
-                        temp: '305.5',
-                        icon: Icons.sunny,
-                      ),
-                      HourlyForecastItem(
-                        time: '5:00',
-                        temp: '310.5',
-                        icon: Icons.cloud,
-                      ),
+                      for (int i = 0; i < 39; i++)
+                        HourlyForecastItem(
+                          time: data['list'][i + 1]['dt'].toString(),
+                          icon:
+                              data['list'][i + 1]['weather'][0]['main'] ==
+                                      'Clouds' ||
+                                  data['list'][i + 1]['weather'][0]['main'] ==
+                                      'Rain'
+                              ? Icons.cloud
+                              : Icons.sunny,
+                           temp: data['list'][i + 1]['main']['temp']
+                              .toString(),
+                        ),
+                       
                     ],
+                  ),
+                )*/
+                SizedBox(
+                  height: 120,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: 39,
+                    itemBuilder: (context, index) {
+                      final hourlyForecast = data['list'][index + 1];
+                      final hourlySky =
+                          data['list'][index + 1]['weather'][0]['main'];
+                      final time = DateTime.parse(hourlyForecast['dt_txt']);
+                      return HourlyForecastItem(
+                        time: DateFormat.Hm().format(time),
+                        temp: hourlyForecast['main']['temp'].toString(),
+                        icon: hourlySky == 'Clouds' || hourlySky == 'Rain'
+                            ? Icons.cloud
+                            : Icons.sunny,
+                      );
+                    },
                   ),
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
 
                 Align(
                   alignment: Alignment.centerLeft,
@@ -160,17 +202,17 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     AdditionalInfoItem(
                       icon: Icons.water_drop,
                       label: 'Humidity',
-                      value: '91',
+                      value: currentHumidity.toString(),
                     ),
                     AdditionalInfoItem(
                       icon: Icons.air,
                       label: 'Wind Speed',
-                      value: '20km/h',
+                      value: '${currentWindSpeed.toString()} km/h',
                     ),
                     AdditionalInfoItem(
                       icon: Icons.beach_access,
                       label: 'Pressure',
-                      value: '1000atm',
+                      value: '${currentPressure.toString()} atm',
                     ),
                   ],
                 ),
