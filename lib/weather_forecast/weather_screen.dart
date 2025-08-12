@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
@@ -17,17 +18,24 @@ class WeatherScreen extends StatefulWidget {
 
 class _WeatherScreenState extends State<WeatherScreen> {
   late Future<Map<String, dynamic>> currentWeather;
+  Timer? _timer;
+
+  String cityName =
+          'Tiruchirappalli';
   Future<Map<String, dynamic>> getCurrentWeather() async {
     try {
-      String cityName = 'London';
+       // Changed from 'Mumbai' to 'Tiruchirappalli'
+
+      // Fetching weather data from OpenWeatherMap API
       final res = await http.get(
         Uri.parse(
-          'https://api.opeNweathermap.org/data/2.5/forecast?q=$cityName,uk&APPID=$openWeatherAPIKey',
+          'https://api.openweathermap.org/data/2.5/forecast?q=$cityName,in&APPID=$openWeatherAPIKey',
         ),
       );
+
       final data = jsonDecode(res.body);
-      if (data['cod'] != '200') {
-        throw 'An Unexpected error occured';
+      if (res.statusCode != 200) {
+        throw 'Failed to load weather data: ${data['message']}';
       }
       return data;
     } catch (e) {
@@ -39,15 +47,27 @@ class _WeatherScreenState extends State<WeatherScreen> {
   void initState() {
     super.initState();
     currentWeather = getCurrentWeather();
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      setState(() {
+        currentWeather = getCurrentWeather();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Weather App',
+        title: Text(
+          'Weather App\n$cityName',
           style: TextStyle(fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
         ),
         centerTitle: true,
         actions: [
@@ -55,7 +75,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
             onPressed: () {
               setState(() {
                 currentWeather = getCurrentWeather();
-              });//CAN ONLY REBUILD ONE SCREEN
+              }); //CAN ONLY REBUILD ONE SCREEN
             },
             icon: Icon(Icons.refresh),
           ),
@@ -75,7 +95,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
           final data = snapshot.data!;
           final currentWeatherData = data['list'][0];
-          final currentTemp = currentWeatherData['main']['temp'];
+          final currentTemp = currentWeatherData['main']['temp'] - 273.15;
           final currentSky = currentWeatherData['weather'][0]['main'];
           final currentPressure = currentWeatherData['main']['pressure'];
           final currentWindSpeed = currentWeatherData['wind']['speed'];
@@ -105,7 +125,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                           child: Column(
                             children: [
                               Text(
-                                '$currentTemp K',
+                                '${currentTemp.toStringAsFixed(1)} °C',
                                 style: TextStyle(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
@@ -173,9 +193,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
                       final hourlySky =
                           data['list'][index + 1]['weather'][0]['main'];
                       final time = DateTime.parse(hourlyForecast['dt_txt']);
+                      final hourlyTemp =
+                          hourlyForecast['main']['temp'] - 273.15;
                       return HourlyForecastItem(
                         time: DateFormat.Hm().format(time),
-                        temp: hourlyForecast['main']['temp'].toString(),
+                        temp: '${hourlyTemp.toStringAsFixed(1)} °C',
                         icon: hourlySky == 'Clouds' || hourlySky == 'Rain'
                             ? Icons.cloud
                             : Icons.sunny,
